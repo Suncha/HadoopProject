@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>Twitter Top 10 HashTag Summary Display</title>
+        <link rel="stylesheet" href="SummaryView.css" /> 
+        <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+        <script type="text/javascript">
+        var minuteCounter = 1;
+        var formattedDate = '';
+ 
+         function search_buttonclick() {
+        	clearResult();
+            minuteCounter = 1;
+            sendReqToServer();
+            showPreNextButton();
+        }
+            
+          function pre_buttonclick() {
+        	clearResult();
+              minuteCounter += 1;
+              sendReqToServer();
+              showPreNextButton();
+          }
+          
+          function next_buttonclick() {
+        	clearResult();
+              minuteCounter -= 1;
+              sendReqToServer();
+              showPreNextButton();
+          }
+            
+          function showPreNextButton() {
+              if (minuteCounter == 1) {
+                  $("#nextbutton").css('display','none');
+              } else {
+                  $("#nextbutton").css('display','block');
+              }
+              $("#previousbutton").css('display','block');
+          }
+
+            function sendReqToServer() {
+                var temp_url='http://localhost:7001/HbaseProject/rest/csc8711';
+                 var jqxhr = $.ajax({
+                        url: temp_url,
+                        type: 'GET',
+                        async: false,
+                        timeout: 10000,
+                        dataType: 'xml'
+                    });
+                    jqxhr.done(function(xmlData) {
+                        parseXmlResponse(xmlData);
+                    });
+            }
+
+            function parseXmlResponse(xmlData) {
+                var toparray=[];
+                var num = 0;
+                var currentDate = getFormattedDate(minuteCounter);
+                
+                 $(xmlData).find('CellSet').each(function() {
+                    $(this).find('Row').each(function() {
+                      var enc_key = $(this).attr('key');
+                      var rowkey = atob(enc_key).split('/');
+                      //if(rowkey[1]==currentDate){
+                       	if(rowkey[1]==currentDate){
+                       	$(this).find('Cell').each(function() {
+	                        var enc_col = $(this).attr('column');
+	                        var col = atob(enc_col);
+	                        var split = col.split(':');
+	                        var topSummary = split[1];
+	                        if(topSummary == "summary"){
+		                        var enc_val = $(this).text();
+		                        var val = atob(enc_val);
+			                        
+		                        var obj = {
+		                                hashtag: rowkey[0],
+		                                summary: val
+	        		                 	};
+		                        toparray.push(obj);
+		                        num ++;
+	                        }
+	                    });
+                    }
+                });
+                 document.getElementById('Summary').style.display = "block";
+                  for (var i=0;i<toparray.length;i++){
+                 	  $("#Summary").append('<p><h3>'+toparray[i].hashtag+"</h3>&nbsp;&nbsp;&nbsp; "+toparray[i].summary+'</p>');
+              	   }
+                 document.getElementById('ptime').style.display = "block";
+                 $("#ptime").append('<h3>'+currentDate+'</h3>');
+                });
+            }
+           
+             function clearResult() {
+                var summaryNode = document.getElementById("Summary");
+                var timeNode = document.getElementById("ptime");
+                summaryNode.innerHTML = '';
+                timeNode.innerHTML = '';
+            }
+           
+            /*
+             * Time calculation function
+             */
+            function getFormattedDate(dayCounter) {
+                var date = new Date();
+                var milliseconds = date.setDate(date.getDate());
+                //var milliseconds = date.setDate(date.getDate() - dayCounter);
+                var newDate = new Date(milliseconds);
+                var currentDate  = newDate.getDate();
+                var currentDate = (currentDate < 10) ? '0' + currentDate : currentDate;
+                var currentMonth = newDate.getMonth() + 1;
+                var currentMonth = (currentMonth < 10) ? '0' + currentMonth : currentMonth;
+                var currentTime = newDate.getHours();
+                var currentTime = (currentTime < 10) ? '0' + currentTime : currentTime;
+                var currentMinute = newDate.getMinutes()-dayCounter;
+                var currentMinute = (currentMinute < 10) ? '0' + currentMinute : currentMinute;
+                var dateAndTime = newDate.getFullYear() + ":" + currentMonth  + ":" + currentDate+":"+ currentTime+":"+ currentMinute;
+                return dateAndTime;
+            }
+
+            function getCurrentTime() {
+                return (Date.now());
+            }
+
+            function convertDayToMills(noOfdays) {
+                return (noOfdays * 24 * 60 * 60 * 1000);
+            }
+        </script>
+    </head>
+<body>
+   
+<table align=center>
+<tr>
+<td colspan="2">
+<h2>CSc8711 Project: Real Time Twitter Top 10 HashTag Summary</h2>
+</td>
+</tr>
+<tr>
+<td colspan="1">
+<h3>Current Time: </h3>
+<td><div id="ptime" style="font-size:15px;"></div><td>
+</td>
+</tr>
+<tr>
+<td colspan="2" style="background-color:white;text-align:center;">
+<div style="padding:15px;">  
+<button onclick="search_buttonclick()" class="searchbutton" style="font-size:20px;">Search</button>
+</div></td>
+</tr>
+<tr>
+<tr>
+<td>
+<div style="float:left">
+<button class="prenextbutton" id="previousbutton" style="display: none;font-size:20px;" onclick="pre_buttonclick()"> Previous </button>
+</div>
+</td>
+<td>
+<div style="float:right">
+<button class="prenextbutton" id="nextbutton" style="display: none;font-size:20px;" onclick="next_buttonclick()"> Next </button>
+</div>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+ <div id="Summary" style="font-size:15px;width:900px;"></div></td>
+</tr>
+
+</table>
+</body>
+</html>

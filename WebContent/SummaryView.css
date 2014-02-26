@@ -1,0 +1,28 @@
+* {
+    margin: auto;
+    padding: 0px;
+}
+
+body {
+    font: 14px Georgia, serif;
+    background: #ffffff;
+}
+
+.textbox {
+    height: 30px;
+}
+
+.searchbutton {
+    color: black;
+    padding: 5px
+}
+
+.prenextbutton {
+    color: black;
+    padding:5px;
+    font-size:x-small
+}
+
+.class-td {
+    height: 50px;
+}
